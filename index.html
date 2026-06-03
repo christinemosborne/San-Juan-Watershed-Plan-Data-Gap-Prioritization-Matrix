@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Data-Gap Prioritization Matrix — UDWQ</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: #f5f5f3; color: #1a1a1a; min-height: 100vh; padding: 2rem 1rem; }
+  .page { max-width: 960px; margin: 0 auto; background: #fff; border-radius: 12px; border: 1px solid #e0e0da; padding: 2rem 2.5rem 2.5rem; }
+  .page-header { margin-bottom: 1.5rem; border-bottom: 1px solid #e0e0da; padding-bottom: 1.25rem; }
+  .page-header h1 { font-size: 22px; font-weight: 500; color: #1a1a1a; }
+  .page-header p { font-size: 14px; color: #666; margin-top: 6px; line-height: 1.6; max-width: 680px; }
+  .formula-bar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 14px; background: #f5f5f3; border: 1px solid #e0e0da; border-radius: 8px; font-size: 13px; color: #555; margin-bottom: 1.5rem; }
+  .formula-bar strong { color: #1a1a1a; font-weight: 500; }
+  .pill { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .pill-w2 { background: #E6F1FB; color: #0C447C; }
+  .pill-w1 { background: #EAF3DE; color: #27500A; }
+  .table-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead th { font-size: 11px; font-weight: 500; color: #666; text-align: left; padding: 8px 10px; border-bottom: 2px solid #e0e0da; white-space: nowrap; background: #fff; }
+  thead th.center { text-align: center; }
+  thead th small { font-size: 10px; font-weight: 400; display: block; margin-top: 2px; }
+  tbody tr { border-bottom: 1px solid #f0f0ec; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: #fafaf8; }
+  td { padding: 10px 10px; vertical-align: middle; }
+  td.gap-name { font-weight: 500; font-size: 13px; color: #1a1a1a; min-width: 180px; }
+  td.gap-name span { display: block; font-size: 11px; font-weight: 400; color: #888; margin-top: 3px; line-height: 1.4; }
+  td.score-cell { text-align: center; }
+  select { font-size: 12px; padding: 4px 6px; border-radius: 6px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; width: 54px; cursor: pointer; }
+  select:focus { outline: 2px solid #378ADD; outline-offset: 1px; }
+  .total-badge { display: inline-block; min-width: 40px; padding: 4px 10px; border-radius: 20px; font-size: 13px; font-weight: 500; text-align: center; }
+  .tier-badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+  .tier1 { background: #E1F5EE; color: #085041; }
+  .tier2 { background: #FAEEDA; color: #633806; }
+  .tier3 { background: #F1EFE8; color: #444441; }
+  .add-section { margin-top: 1.5rem; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .add-section input { font-size: 13px; padding: 7px 12px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; width: 280px; }
+  .add-section input:focus { outline: 2px solid #378ADD; outline-offset: 1px; }
+  .btn { font-size: 13px; padding: 7px 14px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; }
+  .btn:hover { background: #f5f5f3; }
+  .btn-export { background: #0F6E56; color: #fff; border-color: #0F6E56; }
+  .btn-export:hover { background: #085041; }
+  .legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: #666; margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid #e0e0da; align-items: center; }
+  .legend strong { color: #1a1a1a; }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .factor-guide { margin-top: 2rem; padding-top: 1.5rem; border-top: 1px solid #e0e0da; }
+  .factor-guide h2 { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 1rem; }
+  .factors { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; }
+  .factor-card { background: #fafaf8; border: 1px solid #e0e0da; border-radius: 8px; padding: 12px 14px; }
+  .factor-card .fc-label { font-size: 12px; font-weight: 500; color: #1a1a1a; margin-bottom: 4px; display: flex; align-items: center; gap: 6px; }
+  .factor-card p { font-size: 11px; color: #666; line-height: 1.5; }
+  .score-guide { margin-top: 12px; }
+  .score-guide h2 { font-size: 15px; font-weight: 500; color: #1a1a1a; margin-bottom: 8px; }
+  .score-rows { display: flex; flex-direction: column; gap: 6px; }
+  .score-row { display: flex; align-items: flex-start; gap: 10px; font-size: 12px; }
+  .score-num { min-width: 22px; font-weight: 500; color: #1a1a1a; }
+  .score-desc { color: #666; line-height: 1.5; }
+  @media print { body { background: #fff; padding: 0; } .page { border: none; border-radius: 0; padding: 1rem; } .btn-export, .add-section { display: none; } }
+</style>
+</head>
+<body>
+
+<div class="page">
+
+  <div class="page-header">
+    <h1>Data-gap prioritization matrix</h1>
+    <p>Score each monitoring need or data gap across four factors. Impairment risk and uncertainty are weighted ×2 to reflect implementation priorities. The highest-scoring gaps become first-tier priorities for future monitoring investment and grant development.</p>
+  </div>
+
+  <div class="formula-bar">
+    <strong>Priority score</strong> =
+    (<span class="pill pill-w2">Impairment risk ×2</span>) +
+    (<span class="pill pill-w2">Uncertainty ×2</span>) +
+    (<span class="pill pill-w1">Feasibility ×1</span>) +
+    (<span class="pill pill-w1">Regulatory / stakeholder ×1</span>)
+    &nbsp;·&nbsp; 1 = low &nbsp;·&nbsp; 2 = medium &nbsp;·&nbsp; 3 = high &nbsp;·&nbsp; Max score = 12
+  </div>
+
+  <div class="table-wrap">
+    <table id="matrix">
+      <thead>
+        <tr>
+          <th style="width:200px;">Monitoring need / data gap</th>
+          <th class="center" style="width:96px;">Impairment risk <span class="pill pill-w2">×2</span></th>
+          <th class="center" style="width:96px;">Uncertainty <span class="pill pill-w2">×2</span></th>
+          <th class="center" style="width:96px;">Feasibility <span class="pill pill-w1">×1</span></th>
+          <th class="center" style="width:110px;">Regulatory / stakeholder <span class="pill pill-w1">×1</span></th>
+          <th class="center" style="width:72px;">Score<small>max 12</small></th>
+          <th class="center" style="width:80px;">Tier</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <div class="add-section">
+    <input type="text" id="new-gap" placeholder="Add a monitoring need / data gap…" aria-label="New data gap name" onkeydown="if(event.key==='Enter')addRow()" />
+    <button class="btn" onclick="addRow()">+ Add row</button>
+    <button class="btn" onclick="deleteSelected()" id="del-btn" style="display:none;color:#A32D2D;border-color:#F09595;">Delete selected</button>
+    <button class="btn btn-export" onclick="exportCSV()">Export CSV</button>
+  </div>
+
+  <div class="legend">
+    <strong>Tiers:</strong>
+    <span class="legend-item"><span class="tier-badge tier1">Tier 1</span> Score 9–12 — first priority for investment &amp; coordination</span>
+    <span class="legend-item"><span class="tier-badge tier2">Tier 2</span> Score 5–8 — address opportunistically or in later phases</span>
+    <span class="legend-item"><span class="tier-badge tier3">Tier 3</span> Score 1–4 — documented; revisit if new information changes importance</span>
+  </div>
+
+  <div class="factor-guide">
+    <h2>Scoring guidance</h2>
+    <div class="factors">
+      <div class="factor-card">
+        <div class="fc-label"><span class="pill pill-w2">×2</span> Impairment risk</div>
+        <p>Does the gap affect understanding of a listed impairment, a high-risk pollutant pathway, or a subwatershed identified as a likely contributor?</p>
+        <div class="score-guide">
+          <div class="score-rows">
+            <div class="score-row"><span class="score-num">1</span><span class="score-desc">Indirect or minor connection to any listed impairment</span></div>
+            <div class="score-row"><span class="score-num">2</span><span class="score-desc">Moderate connection; pollutant pathway plausible</span></div>
+            <div class="score-row"><span class="score-num">3</span><span class="score-desc">Directly affects listed impairment or high-risk pathway</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="factor-card">
+        <div class="fc-label"><span class="pill pill-w2">×2</span> Uncertainty magnitude</div>
+        <p>How much does the gap limit confidence in source attribution, trend interpretation, pollutant reduction targeting, background interpretation, or BMP selection?</p>
+        <div class="score-guide">
+          <div class="score-rows">
+            <div class="score-row"><span class="score-num">1</span><span class="score-desc">Minor effect on confidence; alternatives exist</span></div>
+            <div class="score-row"><span class="score-num">2</span><span class="score-desc">Meaningful limitation; interpretation is uncertain</span></div>
+            <div class="score-row"><span class="score-num">3</span><span class="score-desc">Severely limits source attribution or load targeting</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="factor-card">
+        <div class="fc-label"><span class="pill pill-w1">×1</span> Feasibility</div>
+        <p>Can monitoring realistically be implemented given access constraints, hydrologic conditions, staffing, cost, timing, and partner capacity?</p>
+        <div class="score-guide">
+          <div class="score-rows">
+            <div class="score-row"><span class="score-num">1</span><span class="score-desc">Major barriers — access, cost, or staffing constraints</span></div>
+            <div class="score-row"><span class="score-num">2</span><span class="score-desc">Achievable with some coordination or resources</span></div>
+            <div class="score-row"><span class="score-num">3</span><span class="score-desc">Readily implementable with current capacity</span></div>
+          </div>
+        </div>
+      </div>
+      <div class="factor-card">
+        <div class="fc-label"><span class="pill pill-w1">×1</span> Regulatory / stakeholder</div>
+        <p>Would filling the gap materially support TMDL or 303(d) work, watershed-plan implementation, grant funding, tribal or community concerns, or cross-jurisdictional coordination?</p>
+        <div class="score-guide">
+          <div class="score-rows">
+            <div class="score-row"><span class="score-num">1</span><span class="score-desc">Limited regulatory or stakeholder relevance</span></div>
+            <div class="score-row"><span class="score-num">2</span><span class="score-desc">Moderate support for one regulatory or stakeholder need</span></div>
+            <div class="score-row"><span class="score-num">3</span><span class="score-desc">Directly supports TMDL, grant, or tribal/community need</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const ROWS = [
+  {name:"Continuous flow monitoring", sub:"Where loading risk is suspected but LDC development is blocked by insufficient flow data", ir:3, unc:3, feas:2, reg:3, sel:false},
+  {name:"Storm-event metals sampling", sub:"Episodic mobilization likely; current datasets skewed toward baseflow conditions", ir:3, unc:3, feas:2, reg:2, sel:false},
+  {name:"Paired spring / surface water monitoring", sub:"Groundwater interaction may influence salinity, selenium, temperature, or nutrients", ir:2, unc:3, feas:2, reg:2, sel:false},
+  {name:"Additional bacteria monitoring", sub:"Sparse data in recreation-relevant or community-adjacent reaches", ir:2, unc:2, feas:3, reg:3, sel:false},
+  {name:"Expanded salinity monitoring", sub:"Tributary TDS / sulfate contributions poorly constrained", ir:2, unc:2, feas:2, reg:2, sel:false},
+];
+
+function calcScore(r){ return r.ir*2 + r.unc*2 + r.feas + r.reg; }
+
+function tierInfo(s){
+  if(s>=9) return {label:"Tier 1", cls:"tier1"};
+  if(s>=5) return {label:"Tier 2", cls:"tier2"};
+  return {label:"Tier 3", cls:"tier3"};
+}
+
+function scoreColor(s){
+  if(s>=9) return {bg:"#E1F5EE", col:"#085041"};
+  if(s>=5) return {bg:"#FAEEDA", col:"#633806"};
+  return {bg:"#F1EFE8", col:"#5F5E5A"};
+}
+
+function makeSelect(rowIdx, field, val){
+  const s = document.createElement("select");
+  s.setAttribute("aria-label", field + " score");
+  [1,2,3].forEach(v => {
+    const o = document.createElement("option");
+    o.value = v; o.textContent = v;
+    if(v === val) o.selected = true;
+    s.appendChild(o);
+  });
+  s.onchange = () => { ROWS[rowIdx][field] = parseInt(s.value); refreshRow(rowIdx); };
+  return s;
+}
+
+function refreshRow(i){
+  const tr = document.getElementById("row-"+i);
+  if(!tr) return;
+  const s = calcScore(ROWS[i]);
+  const t = tierInfo(s);
+  const sc = scoreColor(s);
+  tr.querySelector(".total-badge").textContent = s;
+  tr.querySelector(".total-badge").style.background = sc.bg;
+  tr.querySelector(".total-badge").style.color = sc.col;
+  const tb = tr.querySelector(".tier-badge");
+  tb.textContent = t.label;
+  tb.className = "tier-badge " + t.cls;
+}
+
+function renderRows(){
+  const tbody = document.getElementById("tbody");
+  tbody.innerHTML = "";
+  ROWS.forEach((r, i) => {
+    const s = calcScore(r);
+    const t = tierInfo(s);
+    const sc = scoreColor(s);
+    const tr = document.createElement("tr");
+    tr.id = "row-"+i;
+    tr.innerHTML = `
+      <td style="padding-left:6px;">
+        <label style="display:flex;align-items:flex-start;gap:8px;cursor:pointer;">
+          <input type="checkbox" style="margin-top:3px;cursor:pointer;" onchange="toggleSel(${i},this.checked)" ${r.sel?'checked':''}>
+          <span>
+            <span style="font-weight:500;font-size:13px;color:#1a1a1a;">${escHtml(r.name)}</span>
+            ${r.sub ? `<span style="display:block;font-size:11px;color:#888;margin-top:2px;line-height:1.4;">${escHtml(r.sub)}</span>` : ''}
+          </span>
+        </label>
+      </td>
+      <td class="score-cell"></td>
+      <td class="score-cell"></td>
+      <td class="score-cell"></td>
+      <td class="score-cell"></td>
+      <td class="score-cell"><span class="total-badge" style="background:${sc.bg};color:${sc.col};">${s}</span></td>
+      <td class="score-cell"><span class="tier-badge ${t.cls}">${t.label}</span></td>
+    `;
+    const cells = tr.querySelectorAll(".score-cell");
+    cells[0].appendChild(makeSelect(i,"ir",r.ir));
+    cells[1].appendChild(makeSelect(i,"unc",r.unc));
+    cells[2].appendChild(makeSelect(i,"feas",r.feas));
+    cells[3].appendChild(makeSelect(i,"reg",r.reg));
+    tbody.appendChild(tr);
+  });
+  updateDelBtn();
+}
+
+function escHtml(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
+
+function toggleSel(i, v){ ROWS[i].sel = v; updateDelBtn(); }
+
+function updateDelBtn(){
+  document.getElementById("del-btn").style.display = ROWS.some(r=>r.sel) ? "inline-block" : "none";
+}
+
+function addRow(){
+  const inp = document.getElementById("new-gap");
+  const name = inp.value.trim();
+  if(!name) return;
+  ROWS.push({name, sub:"", ir:1, unc:1, feas:1, reg:1, sel:false});
+  renderRows();
+  inp.value = "";
+}
+
+function deleteSelected(){
+  for(let i = ROWS.length-1; i>=0; i--){ if(ROWS[i].sel) ROWS.splice(i,1); }
+  renderRows();
+}
+
+function exportCSV(){
+  const headers = ["Monitoring need","Description","Impairment risk (×2)","Uncertainty (×2)","Feasibility (×1)","Regulatory/stakeholder (×1)","Total score","Tier"];
+  const rows = ROWS.map(r => {
+    const s = calcScore(r);
+    return [r.name, r.sub, r.ir, r.unc, r.feas, r.reg, s, tierInfo(s).label].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",");
+  });
+  const csv = [headers.join(","), ...rows].join("\n");
+  const a = document.createElement("a");
+  a.href = "data:text/csv;charset=utf-8," + encodeURIComponent(csv);
+  a.download = "data_gap_prioritization_matrix.csv";
+  a.click();
+}
+
+renderRows();
+</script>
+</body>
+</html>
